@@ -1,31 +1,60 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import api from "./services/api";
 
 import "./styles.css";
 
 function App() {
-  async function handleAddRepository() {
-    // TODO
-  }
+    const [repositories, setRepositories] = useState([]);
 
-  async function handleRemoveRepository(id) {
-    // TODO
-  }
+    useEffect(() => {
+        api.get("repositories").then((response) => {
+            setRepositories(response.data);
+        });
+    });
+    async function handleAddRepository() {
+        const response = await api.post("repositories", {
+            title: `Novo repositório: ${Date.now()}`,
+            url: "http://google.com/",
+            techs: "ReactJS",
+        });
 
-  return (
-    <div>
-      <ul data-testid="repository-list">
-        <li>
-          Repositório 1
+        const repository = response.data;
 
-          <button onClick={() => handleRemoveRepository(1)}>
-            Remover
-          </button>
-        </li>
-      </ul>
+        setRepositories([...repositories, repository]);
+    }
 
-      <button onClick={handleAddRepository}>Adicionar</button>
-    </div>
-  );
+    async function handleRemoveRepository(id) {
+        await api.delete("repositories/" + id);
+    }
+
+    return (
+        <div>
+            <ul data-testid="repository-list">
+                <li>
+                    {repositories.map((repository) => (
+                        <>
+                            <li key={repository.id}>
+                                Title: {repository.title}
+                                URL:
+                                <a href={repository.url}>{repository.url}</a>
+                                Techs: {repository.techs}
+                            </li>
+
+                            <button
+                                onClick={() =>
+                                    handleRemoveRepository(repository.id)
+                                }
+                            >
+                                Remover
+                            </button>
+                        </>
+                    ))}
+                </li>
+            </ul>
+
+            <button onClick={handleAddRepository}>Adicionar</button>
+        </div>
+    );
 }
 
 export default App;
